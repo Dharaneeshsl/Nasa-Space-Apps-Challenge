@@ -11,3 +11,4 @@
 | Date | Trigger | What Changed | Rationale / Approver |
 | :--- | :--- | :--- | :--- |
 | 2026-10-12 | Plan Locked | Initial lock of `CombustionLens_FINAL_PLAN.md` | Baseline locked for pre-event survey |
+| 2026-10-12 | Tech Stack Lock | Locked stack to React 18 + TypeScript + Vite frontend, FastAPI backend, Docker SDK on Hugging Face Spaces | Decouple UI state entirely from core logic, enable custom Recharts error bar viz, headless core testing with pytest/Vitest |

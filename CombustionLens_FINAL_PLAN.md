@@ -56,15 +56,52 @@ The event date (mid-November 2026) and the official statement release (tentative
 
 ---
 
-## 2. Scope Control
+## 2. Scope Control & Tech Stack (Locked: React + FastAPI)
 
-**MVP (must ship):** Ask with page-level citations and a visible INSUFFICIENT state; Compare with guardrail cards; evidence tier + rank breakdown; structured Safety Brief; 20-question benchmark across 3 systems; public Space.
+### Final Tech Stack (Locked)
 
-**Stretch (only after the 50% freeze gate):** CONFLICTING tier; corpus beyond 25 papers; benchmark to 30 questions; richer Earth-analog section.
+| Layer | Choice | Notes |
+|---|---|---|
+| **Frontend** | React 18 + TypeScript + Vite | React Router for pages |
+| **UI and state** | Tailwind CSS, TanStack Query | Recharts for charts and error bars |
+| **API** | FastAPI + Uvicorn + Pydantic | Thin layer; all logic lives in `core/` |
+| **Language (backend)** | Python 3.11+ | Pin exact version in `requirements.txt` |
+| **PDF parsing** | PyMuPDF | Per-page text, preserving exact page numbers |
+| **Embeddings** | `all-MiniLM-L6-v2` (sentence-transformers) | Runs on CPU |
+| **Vector store** | ChromaDB | Prebuilt index committed or loaded at start |
+| **Reranker** | `ms-marco-MiniLM-L-6-v2` cross-encoder | Rank on raw logits |
+| **Structured data** | DuckDB | `experiments_staging` table + `experiments_verified` view |
+| **Generator LLM** | One model, set in `config.yaml` | **Still open**: chosen on day 1. Same model for baseline A, B, and full system |
+| **Number & unit logic** | Plain Python in `core/units.py`, `numcheck.py` | Deterministic, unit-tested |
+| **Backend tests** | pytest | Synthetic fixtures only inside `tests/` |
+| **Frontend tests** | Vitest + React Testing Library | Smoke tests for refusal, guardrail, null rendering |
+| **Profiling** | psutil | Peak memory for cold start and one query |
+| **Hosting** | Hugging Face Space, Docker SDK | Multi-stage Dockerfile: build frontend, serve with FastAPI |
+| **Secrets** | Environment variables / Space secrets | Never committed |
+| **Version control** | Git, tagged `plan-locked` | Change log for all updates |
+| **Build agent** | Antigravity, four-stage prompt | Review after each stage |
 
-**Cut:** tunable-weights UI; NLP independence/contradiction detection; probability calibration; alternate hosting.
+### MVP (must ship)
+1. **Ask page:** Retrieval over paper corpus, page-level citations, visible INSUFFICIENT refusal state.
+2. **Compare page:** Verified side-by-side from DuckDB, with guardrail cards and Recharts error bars.
+3. **Evidence tier + rank breakdown:** Shown per finding (fixed weights).
+4. **Evaluation:** 20-question minimum benchmark across 3 systems.
+5. **Safety Brief page:** Structured synthesis with citations, tiers, conditions of validity, and disclaimer.
+6. **Public Space:** Multi-stage Docker container deployed on Hugging Face Spaces.
 
-**2-person cuts:** Safety Brief becomes a view inside Ask, benchmark 15 questions, data target 12 rows.
+### Stretch (only after the 50% freeze gate)
+- `CONFLICTING` tier (needs curated contradiction flags).
+- Expand benchmark from 20 to 30 questions.
+- Terrestrial transferability section in Safety Brief.
+
+### Cut
+- Tunable-weights UI.
+- NLP independence/contradiction detection.
+- Probability calibration (Platt/isotonic).
+- Alternate hosting targets.
+
+### 2-person cuts
+Safety Brief becomes a view inside Ask, benchmark 15 questions, data target 12 rows.
 
 ---
 
@@ -79,7 +116,8 @@ flowchart TD
         CSV["experiments CSV, two-person verification"] --> Stg[("DuckDB staging")]
         Stg --> Ver[("experiments_verified view")]
     end
-    subgraph Logic
+
+    subgraph Core Python Logic
         Chroma --> Ret["Dense top-20"] --> RR["Cross-encoder rerank top-5<br/>rank on raw logit"]
         RR --> Gate{"Top logit >= tau?"}
         Gate -- No --> Refuse["INSUFFICIENT: no generated text"]
@@ -88,10 +126,17 @@ flowchart TD
         Gen --> Check["Citation + normalized number check"]
         Ver --> Cmp["Deterministic comparator"]
     end
-    subgraph UI["Streamlit on Hugging Face Spaces"]
-        Check --> Ask
-        Cmp --> Compare
-        Check --> Brief["Safety Brief"]
+
+    subgraph FastAPI Backend
+        Refuse & Check & Tier --> API_Ask["/api/ask"]
+        Cmp --> API_Compare["/api/compare"]
+        Check --> API_Brief["/api/safety-brief"]
+    end
+
+    subgraph React Frontend Vite + Tailwind
+        API_Ask --> UI_Ask["Ask View (React Router)"]
+        API_Compare --> UI_Compare["Compare View (Recharts)"]
+        API_Brief --> UI_Brief["Safety Brief View"]
     end
 ```
 
@@ -121,7 +166,7 @@ Columns: `doc_id, title, authors, year, campaign_or_series, research_group_label
 - `source_type`: `flight`, `drop_tower`, `parabolic_flight`, `numerical`, `review`, `unknown`.
 
 ### 4.4 Experiment schema (`data/experiments.duckdb`)
-Staging table fields: experiment_series, run_id, fuel, fuel_class, geometry, scale_dimension_raw, O2_value, O2_basis, diluent, pressure_raw_value, pressure_raw_unit, gravity_level, flow_regime, flow_velocity_cm_s, metric_name, metric_value_raw, metric_uncertainty_raw, metric_unit_raw, measurement_method, pressure_std_kPa, metric_value_std, metric_unit_std, conversion_provenance, source_paper, source_page, curated_by, verified_by, verified_date, doc_id, second_pass_agrees. Only identifying and condition fields are NOT NULL; all unverified values stay nullable.
+Staging table fields: `experiment_series, run_id, fuel, fuel_class, geometry, scale_dimension_raw, O2_value, O2_basis, diluent, pressure_raw_value, pressure_raw_unit, gravity_level, flow_regime, flow_velocity_cm_s, metric_name, metric_value_raw, metric_uncertainty_raw, metric_unit_raw, measurement_method, pressure_std_kPa, metric_value_std, metric_unit_std, conversion_provenance, source_paper, source_page, curated_by, verified_by, verified_date, doc_id, second_pass_agrees`. Only identifying and condition fields are NOT NULL; all unverified values stay nullable.
 
 ```sql
 CREATE VIEW experiments_verified AS
@@ -146,7 +191,7 @@ Bi-encoder `all-MiniLM-L6-v2` top-20, cross-encoder `ms-marco-MiniLM-L-6-v2` top
 `tau_ce` (raw logit) is set on the dev half of the benchmark and reported on the held-out half. With only 10 to 15 held-out questions this is a **sanity check, not a generalization claim**; report counts next to percentages.
 
 ### 5.3 Rank score (fixed weights)
-`Rank = 0.60 * s_rel + 0.25 * S_corrob + 0.15 * S_source`
+`Rank = 0.60 * s_rel + 0.25 * S_corrob + 0.15 * S_source`  
 Weights are **unvalidated defaults**, checked by ablation (relevance-only vs. full) and reported either way. `s_rel` is min-max normalized across the top-5.
 
 | Independent groups (`S_corrob`) | Score |
@@ -206,19 +251,20 @@ States: `PASS`, `PASS WITH WARNINGS`, `GUARDRAIL FAILURE`. Failures are explicit
 
 ---
 
-## 8. UI Specification
+## 8. UI & Frontend Specification (React 18 + Vite)
 
 Build order: refusal state, Ask, Compare, Safety Brief.
 
-**Ask**
+**Ask View**
 - Page-level citations (paper title, page), tier badge, rank breakdown, normalized relevance score.
 - **INSUFFICIENT state:** "No sufficiently relevant evidence in the corpus", nearest documents with scores, no answer.
 - **Ambiguity handling:** if key conditions are missing (fuel, pressure, gravity, flow), ask for them instead of answering.
 - **Number check (normalized):** each number in generated text is parsed with its unit and compared against numbers in cited chunks after unit normalization and rounding to the source's significant figures. A sentence whose numbers cannot be matched is hidden and logged. Generation is instructed to quote source values rather than restate them.
 
-**Compare:** choose two verified experiments; guardrail cards, harmonized units, Plotly chart with error bars, provenance (paper, page, curator, verifier); "not verified" for nulls.
+**Compare View**
+- Choose two verified experiments; guardrail cards, harmonized units, Recharts component with error bars, provenance (paper, page, curator, verifier); "not verified" for nulls.
 
-**Safety Brief (structured)**
+**Safety Brief View (structured)**
 1. Question and scope statement
 2. Key findings, each with citation and tier
 3. **Conditions of validity:** gravity level, atmosphere, pressure, flow, scale under which each finding was observed
@@ -226,7 +272,7 @@ Build order: refusal state, Ask, Compare, Safety Brief.
 5. Known limitations and gaps in the corpus
 6. Disclaimer
 
-**Global footer:** disclaimer, corpus size, number of verified rows, last data update.
+**Global Footer:** disclaimer, corpus size, number of verified rows, last data update.
 
 ---
 
@@ -259,11 +305,13 @@ Factual accuracy, citation support, hallucination rate, appropriate refusal rate
 
 ---
 
-## 10. Hosting
-- **Hugging Face Spaces (Streamlit SDK).** Previously documented free CPU specs were 2 vCPU / 16 GB; **re-verify before the event**.
+## 10. Hosting & Docker Deployment
+- **Hugging Face Spaces (Docker SDK).** Multi-stage Dockerfile:
+  - Stage 1: Build React 18 frontend with Node.js/Vite.
+  - Stage 2: Python 3.11 image running FastAPI with Uvicorn, serving static frontend assets and REST API endpoints.
 - Pre-build the Chroma index and commit it or load from a dataset repo; no re-embedding on cold start.
 - Profile peak RSS with `psutil` for cold start and a query; record in `docs/profiling.md`.
-- Pinned `requirements.txt`, one-command local run, cached LLM outputs, backup demo recording.
+- Pinned `requirements.txt` and `package.json`, one-command local run, cached LLM outputs, backup demo recording.
 
 ---
 
@@ -274,8 +322,8 @@ Factual accuracy, citation support, hallucination rate, appropriate refusal rate
 |---|---|
 | Data lead | Survey log, `paper_meta.csv`, license check, experiments CSV, DuckDB, unit tests |
 | Verifier | Second-pass verification, agreement stat, benchmark gold answers |
-| Backend/ML | Ingestion, retrieval, rerank, gate, tiers, baselines, eval runner |
-| Frontend/Demo | Streamlit, Plotly, deployment, README, video, submission |
+| Backend/ML | Ingestion, retrieval, rerank, gate, tiers, FastAPI endpoints, eval runner |
+| Frontend/Demo | React 18, Tailwind, Recharts, Docker packaging, demo video, README, submission |
 
 With 3 people the Verifier also takes evaluation; with 2, see Section 2.
 
@@ -288,40 +336,24 @@ With 3 people the Verifier also takes evaluation; with 2, see Section 2.
 | Oct 20 to 27 | Fill `paper_meta.csv` (group labels, source types); start experiment CSV with page numbers; draft 20 questions and gold answers | Data lead, Verifier | `paper_meta.csv`, first 10+ rows, draft `questions.csv` | Group labels exist for all 25 core papers |
 | Oct 28 to 30 | Official statement diff audit using Section 1.2 | Lead | `docs/diff_audit.md` | Scope confirmed or revised |
 | Oct 30 to Nov 6 | Second-pass verification; compute agreement; verify demo pair candidates; finalize benchmark | Verifier, Data lead | Verified rows, agreement %, final pairs | **Gate P2:** count verified rows; choose Target / Fallback / Floor |
-| Nov 6 to event | Rehearse roles, re-check Space tier specs, prepare accounts and keys, dry-run the schedule | All | Checklist complete | Everyone knows their first 6 hours |
-
-If the event is earlier than mid-November, compress by cutting corpus size first, then benchmark questions, never the verification step.
+| Nov 6 to event | Rehearse roles, re-check Docker Space tier specs, prepare accounts and keys, dry-run schedule | All | Checklist complete | Everyone knows their first 6 hours |
 
 ### 11.3 Event window (percent of total time; worked example for 48 h)
 
 | % of event | Example hours | Work | Exit criterion |
 |---|---|---|---|
-| 0 to 4% | 0 to 2 | Confirm official rules, set up repo/env, load corpus, choose generator model | Everyone running the app skeleton |
+| 0 to 4% | 0 to 2 | Confirm official rules, set up repo/env, load corpus, choose generator model | Everyone running backend/frontend dev server |
 | 4 to 13% | 2 to 6 | Ingestion, Chroma index, dense retrieval; parallel: finish curation | Query returns chunks with page numbers |
-| 13 to 21% | 6 to 10 | Cross-encoder, refusal gate, **INSUFFICIENT UI first** | Out-of-scope query refuses |
+| 13 to 21% | 6 to 10 | Cross-encoder, refusal gate, **INSUFFICIENT UI first** | Out-of-scope query refuses cleanly |
 | **17%** | **Hour 8** | **Checkpoint E1:** count verified rows, pick Target/Fallback/Floor | Decision logged |
 | 21 to 33% | 10 to 16 | Ask page: citations, tiers, rank breakdown, number check | **Demo-ready Ask** |
-| 25 to 42% | 12 to 20 | Comparator, unit tests, Compare page, guardrail cards | **Demo-ready Compare** by 42% |
+| 25 to 42% | 12 to 20 | Comparator, unit tests, Compare page, guardrail cards, Recharts | **Demo-ready Compare** by 42% |
 | 42 to 54% | 20 to 26 | Safety Brief; baselines A and B; eval runner | All three systems answer all questions |
 | **50%** | **Hour 24** | **FEATURE FREEZE** | Only fixes, evaluation, polish |
 | 50 to 67% | 24 to 32 | Run benchmark, blind grading, ablation, write `eval/results.md` | Results table + limitations done |
-| 67 to 79% | 32 to 38 | Deploy to Space, profile memory, bug fixes, README | Public URL works on a fresh browser |
+| 67 to 79% | 32 to 38 | Multi-stage Docker build, deploy to Space, profile memory, README | Public URL works on a fresh browser |
 | 79 to 92% | 38 to 44 | Record demo video plus backup; fill submission form | Video under 3 minutes |
 | 92 to 100% | 44 to 48 | Buffer, final checklist, **submit early** | Submitted before deadline |
-
-**Slip rule:** if Compare is not demo-ready by 42%, switch to the fallback demo and shrink the Safety Brief to its minimal form.
-
-### 11.4 Rhythm during the event
-- 5-minute standup at the start of each block: blockers, next exit criterion.
-- Every 6 hours: merge to main and run the smoke tests.
-- Data lead and Frontend lead jointly enforce the freeze.
-
-### 11.5 Smoke tests (before every merge after 25%)
-1. Out-of-scope query returns INSUFFICIENT with no generated text.
-2. A known question returns a cited answer with correct page numbers.
-3. A known guardrail-failure pair shows the failure card.
-4. A null field renders "not verified".
-5. The disclaimer appears on every page.
 
 ---
 
@@ -331,11 +363,9 @@ If the event is earlier than mid-November, compress by cutting corpus size first
 |---|---|
 | 0:00 to 0:15 | Problem: scattered literature, and why generic AI is untrustworthy here |
 | 0:15 to 1:15 | **Ask:** cited answer with tier; an out-of-scope refusal; rank breakdown |
-| 1:15 to 2:15 | **Compare:** a passing pair with error bars, then a guardrail failure |
+| 1:15 to 2:15 | **Compare:** passing pair with Recharts error bars, then a guardrail failure |
 | 2:15 to 2:45 | **Safety Brief** with conditions of validity and the disclaimer |
 | 2:45 to 3:00 | **Evaluation:** held-out results with counts and limitations; one line on integrity rules |
-
-Film only comparisons that were actually verified.
 
 ---
 
@@ -350,7 +380,7 @@ Film only comparisons that were actually verified.
 | Demo pair fails verification | Medium | Substitute best verified pair |
 | Hallucinated numbers | Medium | Normalized number check; hide failures |
 | LLM API outage or limits | Medium | Cache, backup recording |
-| Memory or cold-start trouble | Low-Medium | Pre-built index, profiling |
+| Memory or cold-start trouble | Low-Medium | Pre-built index, Docker profiling with `psutil` |
 | Teammate drops out | Medium | 2-person cuts |
 | Scope creep after freeze | High | 50% freeze enforced |
 
@@ -363,7 +393,7 @@ Film only comparisons that were actually verified.
 - [ ] Verified rows with page numbers, verifier names, agreement %
 - [ ] Refusal, ambiguity and guardrail-failure behaviors demonstrated
 - [ ] `questions.csv`, `grade_sheet.csv`, `results.md` (limitations and generator model recorded)
-- [ ] Public Space tested on a fresh browser
+- [ ] Public Docker Space tested on a fresh browser
 - [ ] README (setup, architecture, data provenance, disclaimer)
 - [ ] Demo video under 3 minutes plus backup
 - [ ] Licenses and attributions reviewed
@@ -371,4 +401,4 @@ Film only comparisons that were actually verified.
 ---
 
 ## 15. Definition of Done
-A stranger can open the Space, ask a question, receive a cited answer with a tier or a clean refusal, compare two verified experiments (and watch the system refuse an invalid pair), and read an evaluation that honestly states what was and was not shown.
+A stranger can open the Docker Space, ask a question, receive a cited answer with a tier or a clean refusal, compare two verified experiments (and watch the system refuse an invalid pair), and read an evaluation that honestly states what was and was not shown.
