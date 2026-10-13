@@ -1,0 +1,1 @@
+question_id,blinded_system_label,split,category,question,gold_answer,gold_citation_paper,gold_citation_page,generated_output,cited_sources,factual_accuracy,citation_supported,hallucination,refusal_correct,notes,grader
