@@ -1,0 +1,29 @@
+# Version Control
+.git/
+.gitignore
+
+# Node & Frontend Build Artifacts
+**/node_modules/
+**/dist/
+frontend/dist/
+frontend/node_modules/
+
+# Python Cache & Virtual Environments
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+venv/
+.venv/
+env/
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Secrets & Private Evaluation Keys
+eval/.blind_key.json
+eval/*blind_key*
+repomix-output.*
+
