@@ -1,0 +1,35 @@
+# CombustionLens Configuration (Stage 1 Foundation)
+
+model:
+  generator_model: ""  # Blank: human sets this in Stage 3 / Day 1
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  cross_encoder_model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  temperature: 0.0
+
+retrieval:
+  top_k_bi: 20
+  top_k_ce: 5
+  tau_ce: null  # Null until empirically tuned on dev benchmark split
+
+ranking_weights:
+  rel: 0.60
+  corrob: 0.25
+  source: 0.15
+
+chunking:
+  chunk_tokens_min: 150
+  chunk_tokens_max: 250
+  chunk_overlap: 40
+
+evaluation:
+  split_seed: null  # Blank: set when benchmark questions are split into dev/held-out
+
+paths:
+  corpus_dir: "data/pdfs"
+  chroma_dir: "data/index"
+  paper_meta: "data/paper_meta.csv"
+  experiments_staging: "data/experiments_staging.csv"
+  experiments_db: "data/experiments.duckdb"
+  eval_questions: "eval/questions.csv"
+  eval_grade_sheet: "eval/grade_sheet.csv"
+  eval_results: "eval/results.md"
