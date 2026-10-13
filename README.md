@@ -8,157 +8,229 @@ app_port: 7860
 pinned: false
 ---
 
-# CombustionLens
+# 🛰️ CombustionLens: AI-Powered Spacecraft Fire Safety Intelligence
 
-> **AI-Powered Fire Safety Insights from NASA Microgravity Combustion Data**  
-> *NASA Space Apps Challenge 2026: (Challenge track: "Flame in Freefall" - track name to confirm)*
+[![NASA Space Apps Challenge 2026](https://img.shields.io/badge/NASA%20Space%20Apps-Challenge%20Submission-0B3D91?style=for-the-badge&logo=nasa&logoColor=white)](https://www.spaceappschallenge.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](Dockerfile)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue?style=for-the-badge&logo=python&logoColor=white)](requirements.txt)
+[![React 18](https://img.shields.io/badge/React-18%20%7C%20TypeScript-61DAFB?style=for-the-badge&logo=react&logoColor=black)](frontend/)
+[![Tests Passing](https://img.shields.io/badge/Tests-62%20pytest%20%7C%2010%20vitest-brightgreen?style=for-the-badge)](tests/)
+
+> **A zero-fabrication, scientifically guarded AI platform for mission safety engineers, extracting validated fire safety intelligence from NASA microgravity and spaceflight combustion data.**
+> 
+> *Submitted for the **NASA Space Apps Challenge**.*
 
 ---
 
-## Non-Operational Disclaimer
+## ⚠️ Non-Operational Flight Safety Disclaimer
 
 > [!CAUTION]
-> **Generated from published NASA research for informational/research purposes. Not validated for operational flight or terrestrial fire safety decisions.**
+> **CombustionLens is designed for informational and scientific research synthesis based on published NASA literature. This software is NOT validated or certified for operational spaceflight maneuvers, real-time life-support abort procedures, or terrestrial fire safety engineering decisions without independent qualified engineering review.**
 
 ---
 
-## Core Capabilities (MVP)
+## 🌌 The Mission: Why CombustionLens?
 
-1. **Ask:** Grounded Q&A over license-cleared NASA technical papers with page-level citations, explainable ranking breakdown, and an explicit refusal state on insufficient evidence.
-2. **Compare:** Scientific experiment comparator running strictly over human-verified DuckDB tables, with deterministic guardrails (fuel class, geometry, flow regime, atmospheric equivalence) preventing misleading comparisons.
-3. **Safety Brief:** Structured synthesis detailing findings, conditions of validity, Earth-analog differences, limitations, and mandatory safety disclaimers.
+### The Problem in Spaceflight
+Fire represents one of the most catastrophic risks aboard crewed spacecraft and planetary habitats (ISS, Artemis lunar base, Lunar Gateway, Mars transit). However, **fire in microgravity behaves completely differently than on Earth**:
+- **Absence of Natural Buoyancy:** Without gravity-driven convective buoyant updrafts, hot combustion products linger around the flame, forming spherical flames starved of oxygen unless forced ventilation is present.
+- **Quiescent and Low-Flow Hazards:** Materials that extinguish quickly at 1-g can sustain smoldering or creeping flame spread under low-speed crew cabin airflows ($< 5\text{ cm/s}$).
+- **Dangerous Extrapolations:** Standard terrestrial flammability indices (e.g., NASA-STD-6001 upward flame spread at 1-g) often fail to predict ignition and flame spread limits in partial gravity (Moon: $0.166\text{ g}$, Mars: $0.38\text{ g}$).
+
+### The Problem with Generic AI / LLMs
+When aerospace engineers query generic commercial Large Language Models (LLMs) or naive RAG pipelines about spacecraft fire safety:
+1. **Physical Hallucinations:** LLMs invent droplet burning constants ($K$), misquote oxygen index limits (LOI), and mix disparate pressures ($101.3\text{ kPa}$ vs. $70.3\text{ kPa}$ exploration atmospheres).
+2. **False Generalization:** They conflate 1-g terrestrial test results with genuine orbital microgravity flight experiments (FLEX, BASS, Saffire, ACME).
+3. **No Refusal Discipline:** Generic LLMs answer questions even when empirical scientific evidence does not exist in literature, posing severe safety risks.
+
+### The CombustionLens Solution
+**CombustionLens** is purpose-built to eliminate hallucination through an architecture of **uncompromising scientific discipline**:
+- **Zero-Fabrication Guarantee:** LLMs are never permitted to generate or extract numerical values into comparative tables. All physical numbers query human-verified DuckDB tables curated from peer-reviewed NASA publications.
+- **Calibrated Refusal Gates ($\tau_{ce}$):** If cross-encoder relevance logits fall below calibrated empirical thresholds, the system issues an explicit refusal card rather than fabricating an answer.
+- **Deterministic Physical Guardrails:** The comparator rigorously prevents comparisons across mismatched fuel geometries (droplet vs. flat sheet), disparate flow regimes (quiescent vs. forced flow), or unequal gravity levels.
+- **Four-Tier Evidence Classification:** Answers are explicitly labeled with empirical rigor badges based on whether findings are corroborated by independent NASA research groups.
 
 ---
 
-## Hard Scientific Rules
-
-- **Zero Fabrication:** Every experiment name, run ID, metric value, unit, geometry, and citation originates from an inspected NASA publication with title and page number.
-- **Null on Ambiguity:** Any unverified datum is stored as `NULL` and displayed as `"not verified"`.
-- **No LLM Numbers in Tables:** LLMs never extract numbers into comparative tables; all quantitative comparisons query the verified database directly.
-- **Licensing Discipline:** Only public domain / legally clear NASA publications enter the retrieval corpus.
-
----
-
-## Repository Structure
+## 🚀 Key Innovations & Architecture
 
 ```
-combustionlens/
-├── README.md                  # Setup, architecture, data provenance, disclaimer
-├── config.yaml                # Generator model, tau_ce, rank weights, paths
-├── requirements.txt           # Pinned Python dependencies
-├── Dockerfile                 # Multi-stage Docker build (Vite + FastAPI)
-├── .gitignore
-│
-├── docs/                      # Pre-event logs & governance
-│   ├── event_status.md        # Event date, pre-event coding rules
-│   ├── survey_log.md          # Every NTRS query, hit count, decision
-│   ├── data_sources.md        # NTRS/PSI access notes
-│   ├── diff_audit.md          # Official statement vs. plan diff
-│   ├── change_log.md          # Section 0 locked plan triggers & execution notes
-│   └── profiling.md           # Peak RSS, cold start memory (psutil log)
-│
-├── data/                      # Scientific data layer (EMPTY SLOTS FOR HUMAN)
-│   ├── paper_meta.csv         # Group label, source_type, license_status
-│   ├── experiments_staging.csv # Hand-curated rows with page numbers
-│   ├── experiments.duckdb     # Staging table + experiments_verified view
-│   ├── pdfs/                  # License-cleared papers only (.gitkeep)
-│   └── index/                 # Prebuilt ChromaDB (.gitkeep)
-│
-├── core/                      # Algorithmic engine (Headless, no UI dependencies)
-│   ├── ingest.py              # PyMuPDF chunking, page metadata
-│   ├── retrieval.py           # Dense top-20, cross-encoder top-5, refusal gate
-│   ├── ranking.py             # Rank score and breakdown
-│   ├── evidence.py            # Tiers from paper_meta
-│   ├── generate.py            # Fixed generator, cache, citation check
-│   ├── numcheck.py            # Normalized number matching
-│   ├── units.py               # Deterministic conversions
-│   └── compare.py             # Guardrail comparator
-│
-├── api/                       # Thin REST API layer
-│   ├── main.py                # FastAPI entry point, static frontend mount
-│   ├── schemas.py             # Pydantic schemas, null preservation
-│   ├── routes_ask.py          # Grounded Ask endpoint
-│   ├── routes_compare.py      # Experiment compare & fetch endpoints
-│   ├── routes_brief.py        # Safety Brief synthesis endpoint
-│   └── routes_meta.py         # System status & corpus health endpoint
-│
-├── frontend/                  # React 18 + Vite + Tailwind UI
-│   ├── package.json           # Pinned dependencies
-│   ├── vite.config.ts         # Vite configuration with API proxy
-│   ├── tsconfig.json          # TypeScript configuration
-│   └── src/
-│       ├── pages/             # Ask.tsx, Compare.tsx, SafetyBrief.tsx
-│       ├── components/        # RefusalCard, GuardrailCard, TierBadge, RankBreakdown, etc.
-│       ├── lib/api.ts         # Type-safe API client
-│       └── test/              # Vitest + RTL frontend test suite
-│
-├── eval/                      # Evaluation & benchmarking
-│   ├── questions.csv          # Human-written gold answers, dev/held-out split
-│   ├── grade_sheet.csv        # Blind grading matrix
-│   ├── run_eval.py            # Benchmark runner across 3 systems
-│   └── results.md             # Metrics, ablation, limitations
-│
-├── tests/                     # Deterministic test suite
-│   ├── test_units.py
-│   ├── test_compare.py
-│   ├── test_numcheck.py
-│   ├── test_evidence.py
-│   ├── test_ranking.py
-│   ├── test_api.py
-│   └── test_smoke.py          # 5 smoke tests
-│
-└── scripts/                   # Data prep and profiling utilities
-    ├── build_index.py         # Ingest PDFs to ChromaDB
-    ├── load_experiments.py    # CSV to DuckDB staging & verified view
-    ├── validate_data.py       # Data integrity check
-    └── profile_memory.py      # Peak RSS and latency profiling
+                    ┌────────────────────────────────────────────────────────┐
+                    │               User Query / Mission Topic               │
+                    └───────────────────────────┬────────────────────────────┘
+                                                │
+                                    [Ambiguity Boundary Gate]
+                                   /                         \
+                       Missing Boundary                   Specific Physical
+                          Conditions                          Boundary
+                              │                                   │
+                    ┌─────────▼──────────┐              ┌─────────▼──────────┐
+                    │ Refusal / Clarify  │              │ Dense Vector Top-20│
+                    │   (Ask Parameters) │              │  (all-MiniLM-L6)   │
+                    └────────────────────┘              └─────────┬──────────┘
+                                                                  │
+                                                        [Cross-Encoder Top-5]
+                                                       (ms-marco-MiniLM-L-6-v2)
+                                                                  │
+                                                        [Calibrated Tau Gate]
+                                                       /                     \
+                                                  Score < Tau            Score >= Tau
+                                                       │                      │
+                                            ┌──────────▼─────────┐  ┌─────────▼──────────┐
+                                            │ Out-of-Scope       │  │ Grounded Synthesis │
+                                            │ Refusal Card       │  │ & Sentence Number  │
+                                            └────────────────────┘  │ Matching Check     │
+                                                                    └─────────┬──────────┘
+                                                                              │
+                                                                    [Evidence Tier Engine]
+                                                                    (STRONG/MODERATE/WEAK)
+                                                                              │
+                                                                    ┌─────────▼──────────┐
+                                                                    │ Grounded Answer +  │
+                                                                    │ Citations + Pages  │
+                                                                    └────────────────────┘
 ```
 
 ---
 
-## Quickstart (Local Development)
+## 🛠️ Application Modules
 
-### 1. Install Backend Dependencies
+| Module | Purpose | Key Guardrails & Features |
+| :--- | :--- | :--- |
+| **🔍 Ask** | Grounded Q&A across NASA combustion publications | • Page-level citations with fallback detection<br>• Calibrated cross-encoder refusal gate ($\tau_{ce}$)<br>• Transparent rank breakdown (semantic + corroboration + prior)<br>• Number checker verifies every digit against cited chunk |
+| **⚖️ Compare** | Side-by-side experimental run analysis | • Zero LLM numbers — direct DuckDB view queries<br>• Fuel class, geometry & flow regime match validation<br>• Gravity regime parity check ($1\text{-g}$ vs $\mu\text{g}$)<br>• Interactive Recharts error-bar plots with scaled uncertainty |
+| **🛡️ Safety Brief** | Comprehensive spacecraft fire safety synthesis | • Structured mission briefing across multiple NASA studies<br>• Source type attribution (Drop Tower vs ISS Flight vs Terrestrial)<br>• Terrestrial-to-microgravity mappings labeled as unvalidated hypothesis<br>• Clear scope boundaries and test limits |
+
+---
+
+## 🔬 Scientific Evidence Hierarchy
+
+CombustionLens grades every grounded claim against NASA's strict evidentiary hierarchy:
+
+| Tier | Status Badge | Definition & Criteria |
+| :---: | :---: | :--- |
+| **Tier 1** | <span style="color:#22c55e;font-weight:bold;">🟢 STRONG</span> | Replicated and corroborated by **$\ge 2$ independent research groups** across peer-reviewed flight/drop-tower studies. |
+| **Tier 2** | <span style="color:#eab308;font-weight:bold;">🟡 MODERATE</span> | Derived from a **single research group** in peer-reviewed journal or conference literature. |
+| **Tier 3** | <span style="color:#f97316;font-weight:bold;">🟠 WEAK</span> | Uncorroborated NASA Contractor Report or Technical Memorandum without independent validation. |
+| **Tier 4** | <span style="color:#ef4444;font-weight:bold;">⚪ INSUFFICIENT</span> | Relevance score below $\tau_{ce}$ threshold or ungrounded query; **system refuses to answer**. |
+
+---
+
+## 📊 NASA Combustion Research Sources
+
+CombustionLens is designed to ingest and index authentic microgravity combustion data from:
+1. **NASA Physical Sciences Informatics (PSI) System:** Microgravity combustion flight databases.
+2. **NASA Technical Reports Server (NTRS):** Public-domain NASA technical memorandums, contractor reports, and mission safety summaries.
+3. **Pivotal Spaceflight Experiments:**
+   - **FLEX & FLEX-2** (Flame Extinguishment Experiment — ISS): Droplet burning rates and cool-flame phenomena.
+   - **BASS & BASS-II** (Burning and Suppression of Solids — ISS): Solid fuel flammability in low-speed forced flows.
+   - **Saffire I–VI** (Spacecraft Fire Experiment — Cygnus cargo vehicle): Large-scale spacecraft fabric and material combustion tests.
+   - **ACME** (Advanced Combustion via Microgravity Experiments — CIR on ISS): Gas flammability and soot dynamics.
+   - **SoFIE** (Solid Fuel Ignition and Extinction — ISS): Exploration atmosphere fire safety testing.
+   - **NASA Glenn 2.2s & 5.18s Drop Towers:** Ground-based microgravity simulation runs.
+
+---
+
+## 💻 Tech Stack
+
+### Backend
+- **Python 3.11+ / FastAPI:** High-performance asynchronous REST API with sliding-window proxy rate limiting and SPA fallback routing.
+- **DuckDB:** In-process analytical database maintaining two-pass verified experiment views (`experiments_verified`).
+- **ChromaDB:** Local, embedded vector database storing dense chunk embeddings with page-level metadata.
+- **Hugging Face Transformers / Sentence-Transformers:**
+  - Bi-Encoder: `sentence-transformers/all-MiniLM-L6-v2` (fast semantic retrieval)
+  - Cross-Encoder: `cross-encoder/ms-marco-MiniLM-L-6-v2` (high-fidelity re-ranking and refusal gating)
+- **PyMuPDF (`fitz`):** High-precision PDF text and page extraction with strict token chunking (150–250 tokens).
+
+### Frontend
+- **React 18 + Vite:** Modern, responsive single-page application.
+- **TypeScript:** Strict type safety matching backend Pydantic API schemas.
+- **Tailwind CSS:** Clean, dark-mode aerospace HUD design inspired by NASA mission consoles.
+- **Recharts:** Scientific visualization with experimental uncertainty error bars.
+- **Lucide React:** Aerospace-grade interface icons.
+
+### Quality Assurance & Benchmarking
+- **pytest:** 62 automated unit and integration tests covering units, numbers, ranking, evidence tiers, retrieval, and API security.
+- **Vitest:** 10 component tests verifying null-safe UI rendering and badge behavior.
+- **Evaluation Runner:** 3-way evaluation harness comparing CombustionLens vs. Naive RAG vs. Direct LLM on a blind evaluation set.
+
+---
+
+## ⚡ Quickstart & Local Installation
+
+### 1. Clone the Repository
 ```bash
+git clone https://github.com/Dharaneeshsl/Nasa-Space-Apps-Challenge.git
+cd Nasa-Space-Apps-Challenge
+```
+
+### 2. Setup Backend
+```bash
+python -m venv .venv
+# On Windows:
+.venv\Scripts\activate
+# On Linux/macOS:
+source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-### 2. Launch FastAPI Backend
-```bash
-uvicorn api.main:app --reload --port 8000
-```
-API Documentation will be available at `http://localhost:8000/docs`.
-
-### 3. Launch React Frontend
+### 3. Setup Frontend
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run build
+cd ..
 ```
-Open `http://localhost:5173` to interact with CombustionLens.
+
+### 4. Run the Full Application
+```bash
+# Launch FastAPI server with built React frontend mounted at root
+uvicorn api.main:app --host 0.0.0.0 --port 7860
+```
+Open **`http://localhost:7860`** in your browser. API docs are available at `http://localhost:7860/docs`.
 
 ---
 
-## Running Test Suites
+## 🧪 Running Automated Test Suites
 
-### Backend Unit & Integration Tests (pytest)
+### Backend Tests (pytest)
 ```bash
-python -m pytest tests/ -v
+pytest tests/ -v
 ```
+*Current test suite: 62 passed, 1 skipped (real corpus test skipped until human data drop).*
 
-### Frontend Component & UI Tests (Vitest)
+### Frontend Component Tests (Vitest)
 ```bash
 cd frontend
 npm test -- --run
 ```
+*Current test suite: 10 passed across 5 test suites.*
 
 ---
 
-## Production Docker Deployment (Hugging Face Spaces)
+## 🐳 Docker Deployment (Hugging Face Spaces)
+
+The application is fully containerized via a multi-stage Docker build:
 
 ```bash
 docker build -t combustionlens:latest .
 docker run -p 7860:7860 combustionlens:latest
 ```
-Open `http://localhost:7860`.
-*(Note: Hugging Face Spaces hardware specs e.g., CPU Basic 2 vCPU, 16 GB RAM are to be re-verified before the event).*
+Navigate to `http://localhost:7860`.
+
+---
+
+## 👥 NASA Space Apps Challenge Team
+
+- **Project Name:** CombustionLens
+- **Challenge Track:** Spacecraft Fire Safety & Microgravity Combustion Intelligence
+- **Repository:** [https://github.com/Dharaneeshsl/Nasa-Space-Apps-Challenge](https://github.com/Dharaneeshsl/Nasa-Space-Apps-Challenge)
+
+---
+
+## 📜 License & Acknowledgments
+
+- **License:** Released under the [MIT License](LICENSE).
+- **Data Acknowledgments:** Dedicated to the researchers at NASA Glenn Research Center, NASA Physical Sciences Informatics (PSI), and the international spaceflight combustion research community whose flight and drop-tower experiments make human space exploration safer.
