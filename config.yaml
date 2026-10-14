@@ -9,7 +9,7 @@ model:
 retrieval:
   top_k_bi: 20
   top_k_ce: 5
-  tau_ce: null  # Null until empirically tuned on dev benchmark split
+  tau_ce: -5.00  # Null until empirically tuned on dev benchmark split
 
 ranking_weights:
   rel: 0.60

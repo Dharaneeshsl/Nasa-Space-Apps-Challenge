@@ -38,6 +38,8 @@ data/index/*
 !data/index/.gitkeep
 *.duckdb
 *.duckdb.wal
+datasets/
+*.NEF
 
 # IDE & OS
 .vscode/
