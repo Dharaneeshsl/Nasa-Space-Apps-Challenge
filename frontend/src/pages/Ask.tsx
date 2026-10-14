@@ -160,7 +160,7 @@ export const Ask: React.FC = () => {
                   <TierBadge tier={data.tier} rationale={data.tier_rationale} />
                   {topRelevanceScore > 0 && (
                     <span className="text-xs font-mono text-blue-300 bg-blue-950/40 px-2.5 py-1 rounded border border-blue-800/40">
-                      Top Normalized Relevance: {(topRelevanceScore * 100).toFixed(1)}%
+                      Top Normalized Relevance: {topRelevanceScore.toFixed(3)}
                     </span>
                   )}
                   {data.generation_mode && (

@@ -96,13 +96,14 @@ def calibrate_threshold(
         q_text = q["question"]
         cat = q.get("category", "").strip().lower()
         
-        # Ambiguous questions are handled upstream by the boundary condition gate; do not distort tau_ce
-        if cat in ("ambiguous", "needs_clarification"):
+        # Ambiguous questions are handled upstream by boundary conditions;
+        # Comparative questions evaluate structured DuckDB tables, not text retrieval.
+        if cat in ("ambiguous", "needs_clarification", "comparative"):
             continue
             
         if cat in ("refusal", "out_of_scope", "unanswerable", "negative"):
             label = 0
-        elif cat in ("factual", "comparative", "operational", "terrestrial", "in_domain", "answerable", "positive"):
+        elif cat in ("factual", "operational", "terrestrial", "in_domain", "answerable", "positive"):
             label = 1
         else:
             # Fall back to whether gold_answer is present

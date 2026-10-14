@@ -44,7 +44,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="text-slate-400">
-            CombustionLens • NASA Space Apps 2026 (Track: "Flame in Freefall" - to confirm)
+            CombustionLens • NASA Space Apps Challenge 2026
           </div>
         </div>
       </div>

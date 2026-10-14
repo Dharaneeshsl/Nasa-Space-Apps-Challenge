@@ -24,12 +24,25 @@ def enforce_query_length(text: str, field_name: str = "query", max_length: int =
 
 
 def get_client_ip(request: Request) -> str:
-    """Extract client IP, inspecting reverse-proxy headers (X-Forwarded-For, X-Real-IP) first."""
+    """Extract client IP, inspecting reverse-proxy headers (X-Forwarded-For, X-Real-IP) first.
+    
+    Walks X-Forwarded-For from right to left to skip trusted private proxy IPs,
+    identifying the true connecting client without trusting arbitrary client-prepended headers.
+    """
+    import ipaddress
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
-        client = forwarded.split(",")[0].strip()
-        if client:
-            return client
+        ips = [ip.strip() for ip in forwarded.split(",") if ip.strip()]
+        for ip in reversed(ips):
+            try:
+                addr = ipaddress.ip_address(ip)
+                if not addr.is_private and not addr.is_loopback:
+                    return ip
+            except ValueError:
+                continue
+        if ips:
+            return ips[0]
+            
     real_ip = request.headers.get("x-real-ip")
     if real_ip and real_ip.strip():
         return real_ip.strip()

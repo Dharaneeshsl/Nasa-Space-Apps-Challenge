@@ -188,6 +188,13 @@ def unblind_and_score(
 
     md_lines.extend([
         "",
+        "## Evaluation Limitations & Scientific Honesty",
+        "",
+        "1. **Sample Size:** Benchmark evaluation is conducted on a targeted initial test suite; statistical significance requires expanding the question bank across further mission profiles.",
+        "2. **Outside Graders:** Benchmark responses require independent external domain expert grading to eliminate team evaluation bias.",
+        "3. **Weight Calibration:** Ranking weights (relevance, corroboration, source prior) are heuristic baseline values pending empirical grid optimization.",
+        "4. **Non-Operational Scope:** Results are empirical research benchmarks and do not constitute certification for operational spacecraft fire safety.",
+        "",
         "## Mandatory Governance Note",
         "",
         "> Benchmark answers were graded blind; system IDs were unblinded deterministically via `eval/.blind_key.json`.",

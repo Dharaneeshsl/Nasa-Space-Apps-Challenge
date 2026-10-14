@@ -11,6 +11,14 @@ export const RefusalCard: React.FC<RefusalCardProps> = ({
   nearestDocuments = [],
   title = 'No sufficiently relevant evidence in the corpus',
 }) => {
+  const isNumberFilter = reason.toLowerCase().includes('number') || reason.toLowerCase().includes('numerical');
+  const displayTitle = title !== 'No sufficiently relevant evidence in the corpus'
+    ? title
+    : (isNumberFilter ? 'Generated text suppressed: unverified numerical values detected' : title);
+  const candidatesHeading = isNumberFilter
+    ? 'Retrieved Document Candidates (Numerical Assertions Unverified in Text):'
+    : 'Nearest Document Candidates (Below Acceptance Threshold):';
+
   return (
     <div
       data-testid="refusal-card"
@@ -20,7 +28,7 @@ export const RefusalCard: React.FC<RefusalCardProps> = ({
         <span className="text-2xl">⚠️</span>
         <div>
           <h3 className="text-base font-semibold text-amber-300">
-            {title}
+            {displayTitle}
           </h3>
           <p className="text-sm text-slate-300 mt-1 leading-relaxed">
             {reason}
@@ -34,7 +42,7 @@ export const RefusalCard: React.FC<RefusalCardProps> = ({
       {nearestDocuments && nearestDocuments.length > 0 && (
         <div className="pt-4 border-t border-amber-900/40">
           <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Nearest Document Candidates (Below Acceptance Threshold):
+            {candidatesHeading}
           </h4>
           <div className="space-y-2">
             {nearestDocuments.slice(0, 3).map((doc, idx) => (

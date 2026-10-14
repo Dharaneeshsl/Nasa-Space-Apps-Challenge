@@ -51,12 +51,16 @@ def evaluate_evidence_tier(
             {"distinct_groups": [], "peer_reviewed_count": 0, "contradictions": True}
         )
 
-    # Collect distinct research groups (excluding None / empty / unknown)
-    distinct_groups = set()
+    # Collect distinct research groups case-insensitively (excluding None / empty / unknown)
+    group_map: Dict[str, str] = {}
     for c in candidates:
         grp = c.get("research_group_label")
         if grp and str(grp).strip().lower() not in ("unknown", "none", ""):
-            distinct_groups.add(str(grp).strip())
+            key = str(grp).strip().lower()
+            if key not in group_map:
+                group_map[key] = str(grp).strip()
+
+    distinct_groups = list(group_map.values())
 
     peer_reviewed_count = sum(
         1 for c in candidates if str(c.get("peer_reviewed", "")).strip().lower() in ("y", "yes", "true")

@@ -136,8 +136,12 @@ def test_spa_path_traversal_rejection():
     # Test directory traversal via relative paths
     res = client.get("/../../config.yaml")
     assert res.status_code in (404, 400)
-    # Ensure config.yaml contents were not leaked
     assert "retrieval:" not in res.text
+
+    # Test raw percent-encoded traversal without client-side normalization
+    res_enc = client.get("/%2e%2e/%2e%2e/config.yaml")
+    assert res_enc.status_code in (404, 400)
+    assert "retrieval:" not in res_enc.text
 
 
 def test_brief_with_candidates_synthesis():
