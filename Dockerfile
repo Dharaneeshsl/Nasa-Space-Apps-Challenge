@@ -15,7 +15,7 @@ WORKDIR /app/frontend
 
 # Install package dependencies
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy frontend source and build static artifacts
 COPY frontend/ ./
@@ -29,6 +29,9 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=7860 \
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
     HF_HOME=/home/user/.cache/huggingface
 
 WORKDIR /app
@@ -65,7 +68,9 @@ COPY scripts/ ./scripts/
 COPY eval/ ./eval/
 
 # Initialize DuckDB schema and verify directory structures
-RUN python scripts/load_experiments.py && \
+RUN python scripts/collect_nasa_data.py && \
+    python scripts/prepare_nasa_tables.py && \
+    python scripts/load_experiments.py && \
     python scripts/build_index.py
 
 # Copy compiled frontend from Stage 1 into frontend/dist

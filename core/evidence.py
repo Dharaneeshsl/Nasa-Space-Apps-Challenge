@@ -42,7 +42,7 @@ def evaluate_evidence_tier(
             
     # Check for curated contradiction flags (Stretch tier)
     has_curated_contradiction = any(
-        bool(c.get("contradiction_flag", False)) for c in candidates
+        str(c.get("contradiction_flag", False)).strip().lower() in ("true", "y", "yes", "1") for c in candidates
     )
     if has_curated_contradiction:
         return (
@@ -54,6 +54,10 @@ def evaluate_evidence_tier(
     # Collect distinct research groups case-insensitively (excluding None / empty / unknown)
     group_map: Dict[str, str] = {}
     for c in candidates:
+        if str(c.get("peer_reviewed", "")).strip().lower() not in ("y", "yes", "true"):
+            continue
+        if str(c.get("source_type", "unknown")).strip().lower() in ("review", "unknown", ""):
+            continue
         grp = c.get("research_group_label")
         if grp and str(grp).strip().lower() not in ("unknown", "none", ""):
             key = str(grp).strip().lower()

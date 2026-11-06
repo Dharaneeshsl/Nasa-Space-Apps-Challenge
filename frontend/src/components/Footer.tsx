@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSystemStatus } from '../lib/api';
 
 export const Footer: React.FC = () => {
-  const { data: status } = useQuery({
+  const { data: status, isError } = useQuery({
     queryKey: ['system-status'],
     queryFn: getSystemStatus,
     refetchInterval: 30000,
@@ -24,14 +24,15 @@ export const Footer: React.FC = () => {
 
         {/* Global Metadata & Live Stats */}
         <div className="flex flex-wrap items-center justify-between gap-4 font-mono text-slate-400">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {isError && <span className="text-amber-300">Research API unavailable · curated explorer remains available</span>}
             <span>
-              Corpus: <strong className="text-slate-200">{status?.corpus_size ?? 0} papers</strong>
+              Corpus: <strong className="text-slate-200">{status ? `${status.corpus_size} papers` : 'unknown'}</strong>
             </span>
             <span>•</span>
             <span>
               Verified Rows:{' '}
-              <strong className="text-slate-200">{status?.verified_rows ?? 0}</strong>
+              <strong className="text-slate-200">{status?.verified_rows ?? 'unknown'}</strong>
             </span>
             <span>•</span>
             <span className="text-amber-400">

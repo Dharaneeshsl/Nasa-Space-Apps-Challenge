@@ -1,0 +1,17 @@
+id,category,question,gold_answer,gold_citation_paper,gold_citation_page,split
+ND01,factual,Which two fuels were used in the FLEX droplet experiments reported from March 2009 to December 2011?,Heptane and methanol.,ntrs_20150023456,9,dev
+ND02,factual,What were the dimensions of the SIBAL fabric burned in the Saffire 1 video?,40.6 cm wide by 94 cm long.,ntrs_20170008805,17,dev
+ND03,factual,How long did the Saffire 1 SIBAL fabric burn in the reported video?,420 seconds.,ntrs_20170008805,17,dev
+ND04,factual,What apparatus deployed both free and fiber-supported droplets for FLEX?,The Multi-User Droplet Combustion Apparatus (MDCA).,ntrs_20150023456,9,dev
+ND05,refusal,What is the capital of Mars in 2026?,,,,dev
+ND06,refusal,Which spacecraft fire study provides the winning lottery numbers for next week?,,,,dev
+ND07,refusal,What is the correct antibiotic dose for a child with pneumonia?,,,,dev
+ND08,refusal,What is the price of Bitcoin tomorrow?,,,,dev
+NH01,factual,What nitrogen and oxidizer mixing system controlled the FLEX combustion chamber environment?,The Fuel and Oxidizer Mixing Apparatus (FOMA).,ntrs_20150023456,9,held_out
+NH02,factual,How were the hot-wire igniters positioned relative to each other during FLEX tests?,180 degrees to each other.,ntrs_20150023456,10,held_out
+NH03,factual,What flow speed was used for the Saffire 1 SIBAL fabric video?,20 cm/s concurrent flow.,ntrs_20170008805,17,held_out
+NH04,factual,What were the burn durations for Saffire samples 2-5 and 2-6?,145 seconds and 115 seconds respectively.,ntrs_20170008805,29,held_out
+NH05,refusal,Who won the football World Cup in 2030?,,,,held_out
+NH06,refusal,What is the recipe for chocolate cake?,,,,held_out
+NH07,refusal,Which NASA combustion dataset measures titanium acoustic levitation parameters?,,,,held_out
+NH08,refusal,What is the experimentally verified burning rate of lunar regolith JSC-1A in a lunar habitat?,,,,held_out

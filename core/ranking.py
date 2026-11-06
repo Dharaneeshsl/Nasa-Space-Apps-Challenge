@@ -12,6 +12,7 @@ a context prior, not a scientific truth ranking.
 from typing import Dict, Any, List, Optional
 import yaml
 from pathlib import Path
+from core.config import config_file
 
 SOURCE_PRIOR_SCORES = {
     "flight": 1.00,
@@ -26,7 +27,7 @@ SOURCE_PRIOR_SCORES = {
 def load_ranking_weights(config_path: str = "config.yaml") -> Dict[str, float]:
     """Load ranking weights from config.yaml or return unvalidated defaults."""
     default_weights = {"rel": 0.60, "corrob": 0.25, "source": 0.15}
-    p = Path(config_path)
+    p = config_file(config_path)
     if p.exists():
         try:
             with open(p, "r", encoding="utf-8") as f:

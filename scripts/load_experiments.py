@@ -7,12 +7,14 @@ Handles empty CSV input gracefully without error.
 import os
 import sys
 import csv
+import math
 from pathlib import Path
 import duckdb
 
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from core.units import convert_pressure_to_kpa, standardize_metric
+from core.config import data_path
 
 ALLOWED_FUEL_CLASSES = {"droplet", "cast_solid", "thin_sheet", "gaseous_jet"}
 ALLOWED_O2_BASES = {"mole_fraction", "volume_percent", "mass_fraction"}
@@ -65,15 +67,21 @@ def init_db(db_path: str = "data/experiments.duckdb") -> duckdb.DuckDBPyConnecti
     CREATE OR REPLACE VIEW experiments_verified AS
     SELECT * FROM experiments_staging
     WHERE verified_by IS NOT NULL
+      AND trim(verified_by) <> ''
+      AND trim(curated_by) <> ''
       AND lower(trim(verified_by)) <> lower(trim(curated_by))
+      AND second_pass_agrees IS DISTINCT FROM FALSE
       AND metric_value_raw IS NOT NULL
-      AND source_page IS NOT NULL;
+      AND isfinite(metric_value_raw)
+      AND source_page IS NOT NULL
+      AND trim(source_page) <> '';
     """)
     return con
 
 
 def validate_row(row: dict) -> tuple[bool, str, dict]:
     """Validate a staging CSV row against required constraints and standardize units."""
+    row = {key: value.strip() if isinstance(value, str) else value for key, value in row.items()}
     required_fields = [
         "staging_id", "experiment_series", "fuel", "fuel_class", 
         "geometry", "gravity_level", "metric_name", "metric_unit_raw", 
@@ -107,6 +115,26 @@ def validate_row(row: dict) -> tuple[bool, str, dict]:
         int((row.get("staging_id") or "").strip())
     except ValueError:
         return False, f"Invalid staging_id '{row.get('staging_id')}'. Must be an integer.", {}
+
+    for field in ("O2_value", "pressure_raw_value", "flow_velocity_cm_s",
+                  "metric_value_raw", "metric_uncertainty_raw"):
+        value = row.get(field)
+        if value not in (None, ""):
+            try:
+                number = float(value)
+            except (TypeError, ValueError):
+                return False, f"Invalid numeric field: '{field}'", {}
+            if not math.isfinite(number):
+                return False, f"Non-finite numeric field: '{field}'", {}
+            if field != "metric_value_raw" and number < 0:
+                return False, f"Negative physical value: '{field}'", {}
+            if field == "pressure_raw_value" and number == 0:
+                return False, "Pressure must be positive", {}
+            if field == "O2_value" and number > (100 if o2_basis == "volume_percent" else 1):
+                return False, "Oxygen value is outside its basis range", {}
+    agreement = str(row.get("second_pass_agrees") or "").lower()
+    if agreement not in ("", "true", "false", "1", "0", "yes", "no", "y", "n"):
+        return False, "Invalid second_pass_agrees boolean", {}
 
     # Validate verified_date if present
     v_date = (row.get("verified_date") or "").strip()
@@ -165,20 +193,25 @@ def validate_row(row: dict) -> tuple[bool, str, dict]:
     return True, "", clean_row
 
 
-def load_staging_csv(csv_path: str = "data/experiments_staging.csv", db_path: str = "data/experiments.duckdb") -> int:
+def load_staging_csv(csv_path: str = None, db_path: str = None) -> int:
     """Load rows from staging CSV into DuckDB, reporting errors and rejecting invalid rows."""
+    csv_path = csv_path or data_path("experiments_staging", "data/experiments_staging.csv")
+    db_path = db_path or data_path("experiments_db", "data/experiments.duckdb")
     con = init_db(db_path)
     
     if not os.path.exists(csv_path):
         print(f"Staging CSV not found at '{csv_path}'. Initialized empty DuckDB schema.")
+        con.close()
         return 0
         
-    with open(csv_path, "r", encoding="utf-8") as f:
+    with open(csv_path, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
         
     if not rows:
         print(f"Staging CSV '{csv_path}' has 0 rows (header only). DuckDB schema ready.")
+        con.execute("DELETE FROM experiments_staging;")
+        con.close()
         return 0
 
     valid_rows = []
@@ -193,7 +226,9 @@ def load_staging_csv(csv_path: str = "data/experiments_staging.csv", db_path: st
             valid_rows.append(clean_row)
 
     if rejected_count > 0:
-        print(f"WARNING: {rejected_count} row(s) failed validation. Review errors above.")
+        print(f"ERROR: {rejected_count} row(s) failed validation. Existing records preserved; load aborted.")
+        con.close()
+        return 0
         
     if valid_rows:
         # Pre-check for duplicate staging_ids to prevent partial insertion failure
@@ -235,7 +270,7 @@ def load_staging_csv(csv_path: str = "data/experiments_staging.csv", db_path: st
                 def to_bool(val):
                     if val is None or str(val).strip() == "":
                         return None
-                    return str(val).strip().lower() in ("true", "1", "yes")
+                    return str(val).strip().lower() in ("true", "1", "yes", "y")
 
                 con.execute(insert_sql, [
                     to_int(r["staging_id"]),

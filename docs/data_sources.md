@@ -1,5 +1,7 @@
 # CombustionLens: Data Sources & Accessibility Audit
 
+Current collection: see [NASA_COLLECTION.md](NASA_COLLECTION.md) and `data/provenance/collection_manifest.json` for actual downloaded records, rights determinations, hashes and integration limits. The historical planning notes below predate this collection. The ingestion policy now distinguishes explicit NTRS public-use permission from public-domain status.
+
 > [!NOTE]
 > All URLs, API endpoints, and license claims below are preliminary working notes and are marked **not verified** until verified against official NASA Space Apps Challenge releases.
 

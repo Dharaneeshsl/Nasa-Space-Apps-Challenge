@@ -1,5 +1,6 @@
 export interface Citation {
   doc_id: string;
+  source_url?: string | null;
   paper_title?: string;
   page?: number;
 }

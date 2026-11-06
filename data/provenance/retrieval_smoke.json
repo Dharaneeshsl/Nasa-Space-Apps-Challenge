@@ -1,0 +1,31 @@
+{
+  "status": "answered",
+  "uncalibrated": true,
+  "candidates": [
+    {
+      "doc_id": "ntrs_20170008805",
+      "page": 17,
+      "text": "17 Saffire 1 video SIBAL fabric (40.6 cm x 94 cm) burning in air at 20 cm/s concurrent flow Average flame spread rate is 1.8 mm/s; estimated average flame power"
+    },
+    {
+      "doc_id": "ntrs_20180005168",
+      "page": 25,
+      "text": "25 Saffire 1 video SIBAL fabric (40.6 cm x 94 cm) burning in air at 20 cm/s concurrent flow Average flame spread rate is 1.8 mm/s; estimated average flame power"
+    },
+    {
+      "doc_id": "ntrs_20170008805",
+      "page": 21,
+      "text": "21 \u2022 The flame position curves show that spread rate is steady for most of the tests. \u2022 40.6-cm wide sample \u2012 For the concurrent flame, the length reaches a pla"
+    },
+    {
+      "doc_id": "ntrs_20170008805",
+      "page": 20,
+      "text": "Left: Flame base and pyrolysis position for concurrent and opposed-flow test in Saffire-1. Air flow speed was 20 cm/s. Right: Spread rate summary for cotton/fib"
+    },
+    {
+      "doc_id": "ntrs_20180005168",
+      "page": 17,
+      "text": "17 Saffire-I-III Results Measurements of flame base (up stream), pyrolysis tip (downstream), and pyrolysis length from concurrent and opposed burns from Saffire"
+    }
+  ]
+}

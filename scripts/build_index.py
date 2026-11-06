@@ -12,19 +12,30 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core.ingest import ingest_corpus
+from core.config import data_path, config_file
+
+
+def prune_stale_chunks(collection, current_ids):
+    stale = sorted(set(collection.get(include=[])["ids"]) - set(current_ids))
+    for start in range(0, len(stale), 64):
+        collection.delete(ids=stale[start:start + 64])
 
 
 def build_vector_index(
     config_path: str = "config.yaml",
-    persist_dir: str = "data/index",
-    pdfs_dir: str = "data/pdfs",
-    meta_path: str = "data/paper_meta.csv"
+    persist_dir: str = None,
+    pdfs_dir: str = None,
+    meta_path: str = None
 ):
     """Build or update ChromaDB vector store with chunk embeddings."""
     print("=" * 60)
     print("COMBUSTIONLENS: VECTOR INDEX BUILD PIPELINE")
     print("=" * 60)
     
+    config_path = str(config_file(config_path))
+    persist_dir = persist_dir or data_path("chroma_dir", "data/index", config_path)
+    pdfs_dir = pdfs_dir or data_path("corpus_dir", "data/pdfs", config_path)
+    meta_path = meta_path or data_path("paper_meta", "data/paper_meta.csv", config_path)
     # Ingest chunks
     chunks, skipped = ingest_corpus(pdfs_dir=pdfs_dir, meta_csv_path=meta_path, config_path=config_path)
     
@@ -34,6 +45,12 @@ def build_vector_index(
             print(f"  - [{s['doc_id']}] {s['reason']}")
             
     if not chunks:
+        if Path(persist_dir).exists():
+            import chromadb
+            client = chromadb.PersistentClient(path=persist_dir)
+            names = [c if isinstance(c, str) else c.name for c in client.list_collections()]
+            if "combustion_papers" in names:
+                prune_stale_chunks(client.get_collection("combustion_papers", embedding_function=None), [])
         print("\nNo license-cleared chunks found to index.")
         print(f"Empty state verified. ChromaDB index at '{persist_dir}' is ready for human data drop.")
         print("=" * 60)
@@ -87,6 +104,7 @@ def build_vector_index(
                 metadatas=metadatas[i:i + batch_size]
             )
             
+        prune_stale_chunks(collection, ids)
         print(f"Successfully indexed {len(ids)} chunks in ChromaDB collection 'combustion_papers'.")
         print("=" * 60)
     except Exception as e:

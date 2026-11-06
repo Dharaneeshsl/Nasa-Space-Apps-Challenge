@@ -11,12 +11,15 @@ import os
 import sys
 import csv
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from core.config import data_path
+from core.ingest import is_indexable_metadata
 
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 ALLOWED_SOURCE_TYPES = {"flight", "drop_tower", "parabolic_flight", "numerical", "review", "unknown"}
-ALLOWED_LICENSE_STATUSES = {"public_domain_confirmed", "restricted", "unclear"}
+ALLOWED_LICENSE_STATUSES = {"public_domain_confirmed", "public_use_permitted", "restricted", "unclear"}
 ALLOWED_PEER_REVIEWED = {"y", "n", "unknown"}
 
 
@@ -34,7 +37,7 @@ def validate_corpus(data_dir: str = "data") -> dict:
     
     pdfs_dir = Path(data_dir) / "pdfs"
     meta_path = Path(data_dir) / "paper_meta.csv"
-    db_path = Path(data_dir) / "experiments.duckdb"
+    db_path = Path(data_path('experiments_db', 'data/experiments.duckdb')) if data_dir == 'data' else Path(data_dir) / 'experiments.duckdb'
     
     # 1. Scan PDFs
     pdf_stems = set()
@@ -60,8 +63,10 @@ def validate_corpus(data_dir: str = "data") -> dict:
                 lic = row.get("license_status", "").strip().lower()
                 if lic not in ALLOWED_LICENSE_STATUSES:
                     report["invalid_meta_rows"].append((idx, f"Invalid license_status '{lic}'"))
-                elif lic == "public_domain_confirmed":
+                elif is_indexable_metadata(row):
                     report["license_cleared_count"] += 1
+                elif lic == 'public_use_permitted':
+                    report['invalid_meta_rows'].append((idx, 'Public-use permission lacks official supporting metadata'))
                     
                 # Check source_type
                 src = row.get("source_type", "").strip().lower()
@@ -125,10 +130,14 @@ def print_report():
     print("=" * 60)
     if rep["pdf_count"] == 0 and rep["paper_meta_count"] == 0 and rep["verified_rows_count"] == 0:
         print("STATUS: EMPTY STATE VERIFIED (Ready for official human data drop).")
+    elif rep['missing_meta_pdfs'] or rep['invalid_meta_rows'] or rep.get('db_error'):
+        print("STATUS: VALIDATION FAILED. Resolve the reported errors.")
+        return False
     else:
-        print("STATUS: DATA PRESENT AND VALIDATED.")
+        print("STATUS: STRUCTURAL CHECKS PASSED. Scientific verification is separate.")
+    return True
     print("=" * 60)
 
 
 if __name__ == "__main__":
-    print_report()
+    sys.exit(0 if print_report() else 1)

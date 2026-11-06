@@ -37,6 +37,10 @@ def load_dev_questions(
         
     if not questions:
         return []
+    if any(q.get('split', '').strip() for q in questions):
+        if any(q.get('split', '').strip() not in {'dev', 'held_out'} for q in questions):
+            raise ValueError('Every benchmark row must declare dev or held_out')
+        return [q for q in questions if q['split'].strip() == 'dev']
         
     # Read seed
     seed = 42

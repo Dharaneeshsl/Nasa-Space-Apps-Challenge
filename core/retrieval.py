@@ -15,6 +15,7 @@ import math
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 import yaml
+from core.config import config_file, data_path
 
 # Lazy loaded models to preserve fast startup & memory
 _EMBED_MODEL = None
@@ -61,7 +62,7 @@ def load_retrieval_config(config_path: str = "config.yaml") -> Dict[str, Any]:
         "cross_encoder_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
         "chroma_dir": os.environ.get("COMBUSTIONLENS_CHROMA_DIR", "data/index")
     }
-    p = Path(config_path)
+    p = config_file(config_path)
     if p.exists():
         try:
             with open(p, "r", encoding="utf-8") as f:
@@ -76,7 +77,7 @@ def load_retrieval_config(config_path: str = "config.yaml") -> Dict[str, Any]:
                     "tau_ce": ret.get("tau_ce", None),
                     "embedding_model": mod.get("embedding_model", default_config["embedding_model"]),
                     "cross_encoder_model": mod.get("cross_encoder_model", default_config["cross_encoder_model"]),
-                    "chroma_dir": env_chroma or paths.get("chroma_dir", default_config["chroma_dir"])
+                    "chroma_dir": data_path("chroma_dir", "data/index", config_path)
                 }
         except Exception:
             return default_config
@@ -123,7 +124,7 @@ def retrieve_candidates(
                 "candidates": [],
                 "nearest_documents": []
             }
-        collection = client.get_collection("combustion_papers")
+        collection = client.get_collection("combustion_papers", embedding_function=None)
         total_docs = collection.count()
         if total_docs == 0:
             return {
@@ -175,7 +176,8 @@ def retrieve_candidates(
     # 3. Cross-Encoder Reranking
     cross_encoder = get_cross_encoder_model(cfg["cross_encoder_model"])
     pairs = [[query, doc] for doc in docs]
-    raw_logits = cross_encoder.predict(pairs)
+    # Bound attention memory when running the public CPU demo.
+    raw_logits = cross_encoder.predict(pairs, batch_size=4)
     
     # Bundle items with raw logit and display sigmoid
     reranked = []

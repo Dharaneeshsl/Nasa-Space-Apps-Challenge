@@ -1,0 +1,552 @@
+{
+  "method": "First-pass development gate calibration; not independently reviewed",
+  "benchmark_sha256": "6f251af4685fbb3360766bbaa69593130a3e7b8d658d34ae84ab9bc525cd239d",
+  "tau_ce": 3.9973,
+  "dev_balanced_accuracy": 1.0,
+  "results": [
+    {
+      "id": "ND01",
+      "split": "dev",
+      "question": "Which two fuels were used in the FLEX droplet experiments reported from March 2009 to December 2011?",
+      "answerable": true,
+      "top_logit": 5.2894,
+      "gold_doc": "ntrs_20150023456",
+      "gold_page": "9",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 25
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 7
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 7
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 21
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 22
+        }
+      ],
+      "accepted": true,
+      "gate_correct": true,
+      "gold_page_in_top5": false
+    },
+    {
+      "id": "ND02",
+      "split": "dev",
+      "question": "What were the dimensions of the SIBAL fabric burned in the Saffire 1 video?",
+      "answerable": true,
+      "top_logit": 7.8133,
+      "gold_doc": "ntrs_20170008805",
+      "gold_page": "17",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 17
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 25
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 23
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 20
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 8
+        }
+      ],
+      "accepted": true,
+      "gate_correct": true,
+      "gold_page_in_top5": true
+    },
+    {
+      "id": "ND03",
+      "split": "dev",
+      "question": "How long did the Saffire 1 SIBAL fabric burn in the reported video?",
+      "answerable": true,
+      "top_logit": 7.011,
+      "gold_doc": "ntrs_20170008805",
+      "gold_page": "17",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 25
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 17
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 20
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 16
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 25
+        }
+      ],
+      "accepted": true,
+      "gate_correct": true,
+      "gold_page_in_top5": true
+    },
+    {
+      "id": "ND04",
+      "split": "dev",
+      "question": "What apparatus deployed both free and fiber-supported droplets for FLEX?",
+      "answerable": true,
+      "top_logit": 3.9973,
+      "gold_doc": "ntrs_20150023456",
+      "gold_page": "9",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 10
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 10
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 169
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 7
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 108
+        }
+      ],
+      "accepted": true,
+      "gate_correct": true,
+      "gold_page_in_top5": false
+    },
+    {
+      "id": "ND05",
+      "split": "dev",
+      "question": "What is the capital of Mars in 2026?",
+      "answerable": false,
+      "top_logit": -9.6929,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 5
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 36
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 28
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 21
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 27
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    },
+    {
+      "id": "ND06",
+      "split": "dev",
+      "question": "Which spacecraft fire study provides the winning lottery numbers for next week?",
+      "answerable": false,
+      "top_logit": -4.3066,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 1
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 20
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 3
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 11
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 3
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    },
+    {
+      "id": "ND07",
+      "split": "dev",
+      "question": "What is the correct antibiotic dose for a child with pneumonia?",
+      "answerable": false,
+      "top_logit": -6.604,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 35
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 30
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 21
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 32
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 32
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    },
+    {
+      "id": "ND08",
+      "split": "dev",
+      "question": "What is the price of Bitcoin tomorrow?",
+      "answerable": false,
+      "top_logit": -9.1129,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 35
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 27
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 27
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 36
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 29
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    },
+    {
+      "id": "NH01",
+      "split": "held_out",
+      "question": "What nitrogen and oxidizer mixing system controlled the FLEX combustion chamber environment?",
+      "answerable": true,
+      "top_logit": 3.9439,
+      "gold_doc": "ntrs_20150023456",
+      "gold_page": "9",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 9
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 17
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 8
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 8
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 17
+        }
+      ],
+      "accepted": false,
+      "gate_correct": false,
+      "gold_page_in_top5": true
+    },
+    {
+      "id": "NH02",
+      "split": "held_out",
+      "question": "How were the hot-wire igniters positioned relative to each other during FLEX tests?",
+      "answerable": true,
+      "top_logit": 5.5324,
+      "gold_doc": "ntrs_20150023456",
+      "gold_page": "10",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 10
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 7
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 22
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 22
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 225
+        }
+      ],
+      "accepted": true,
+      "gate_correct": true,
+      "gold_page_in_top5": true
+    },
+    {
+      "id": "NH03",
+      "split": "held_out",
+      "question": "What flow speed was used for the Saffire 1 SIBAL fabric video?",
+      "answerable": true,
+      "top_logit": 6.4952,
+      "gold_doc": "ntrs_20170008805",
+      "gold_page": "17",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 20
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 25
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 17
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 23
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 14
+        }
+      ],
+      "accepted": true,
+      "gate_correct": true,
+      "gold_page_in_top5": true
+    },
+    {
+      "id": "NH04",
+      "split": "held_out",
+      "question": "What were the burn durations for Saffire samples 2-5 and 2-6?",
+      "answerable": true,
+      "top_logit": 4.6875,
+      "gold_doc": "ntrs_20170008805",
+      "gold_page": "29",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 9
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 10
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 16
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 17
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 25
+        }
+      ],
+      "accepted": true,
+      "gate_correct": true,
+      "gold_page_in_top5": false
+    },
+    {
+      "id": "NH05",
+      "split": "held_out",
+      "question": "Who won the football World Cup in 2030?",
+      "answerable": false,
+      "top_logit": -8.0723,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 21
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 36
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 33
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 29
+        },
+        {
+          "doc_id": "ntrs_20180005168",
+          "page": 28
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    },
+    {
+      "id": "NH06",
+      "split": "held_out",
+      "question": "What is the recipe for chocolate cake?",
+      "answerable": false,
+      "top_logit": -9.4762,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 27
+        },
+        {
+          "doc_id": "ntrs_20170008805",
+          "page": 30
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 30
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 29
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 29
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    },
+    {
+      "id": "NH07",
+      "split": "held_out",
+      "question": "Which NASA combustion dataset measures titanium acoustic levitation parameters?",
+      "answerable": false,
+      "top_logit": -5.2946,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 26
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 22
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 32
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 29
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 33
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    },
+    {
+      "id": "NH08",
+      "split": "held_out",
+      "question": "What is the experimentally verified burning rate of lunar regolith JSC-1A in a lunar habitat?",
+      "answerable": false,
+      "top_logit": -6.7154,
+      "gold_doc": "",
+      "gold_page": "",
+      "retrieved": [
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 26
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 8
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 230
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 208
+        },
+        {
+          "doc_id": "ntrs_20150023456",
+          "page": 28
+        }
+      ],
+      "accepted": false,
+      "gate_correct": true,
+      "gold_page_in_top5": null
+    }
+  ]
+}

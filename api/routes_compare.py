@@ -11,14 +11,16 @@ import duckdb
 from pathlib import Path
 
 router = APIRouter(prefix="/api", tags=["Compare"])
-DB_PATH = "data/experiments.duckdb"
+from core.config import data_path
+DB_PATH = None  # Optional explicit override for isolated callers/tests.
 
 
 def get_db_connection():
-    if not Path(DB_PATH).exists():
+    db_path = DB_PATH or data_path("experiments_db", "data/experiments.duckdb")
+    if not Path(db_path).exists():
         from scripts.load_experiments import init_db
-        return init_db(DB_PATH)
-    return duckdb.connect(DB_PATH, read_only=True)
+        return init_db(db_path)
+    return duckdb.connect(db_path, read_only=True)
 
 
 @router.get("/experiments", response_model=List[ExperimentItem])

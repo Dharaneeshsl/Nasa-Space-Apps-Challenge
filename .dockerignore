@@ -23,6 +23,13 @@ env/
 Thumbs.db
 
 # Secrets & Private Evaluation Keys
+.env
+.env.*
+!.env.example
+datasets/
+*.NEF
+tmp/
+data/extracted/
 eval/.blind_key.json
 eval/*blind_key*
 repomix-output.*

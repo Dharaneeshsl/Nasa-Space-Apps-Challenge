@@ -11,6 +11,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 from fastapi import APIRouter
 from api.schemas import StatusResponse
+from core.config import data_path, config_file
+from core.ingest import is_indexable_metadata
 
 router = APIRouter(prefix="/api", tags=["Metadata"])
 
@@ -19,18 +21,18 @@ router = APIRouter(prefix="/api", tags=["Metadata"])
 def get_system_status() -> StatusResponse:
     # 1. Corpus size from license-cleared papers in paper_meta.csv
     corpus_size = 0
-    meta_path = Path("data/paper_meta.csv")
+    meta_path = Path(data_path("paper_meta", "data/paper_meta.csv"))
     if meta_path.exists():
         try:
             with open(meta_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
-                corpus_size = len([r for r in reader if r.get("license_status") == "public_domain_confirmed"])
+                corpus_size = sum(is_indexable_metadata(r) for r in reader)
         except Exception:
             corpus_size = 0
 
     # 2. Verified rows count from DuckDB and human-readable last update
     verified_rows = 0
-    db_path = Path("data/experiments.duckdb")
+    db_path = Path(data_path("experiments_db", "data/experiments.duckdb"))
     last_update = None
     if db_path.exists():
         try:
@@ -44,14 +46,15 @@ def get_system_status() -> StatusResponse:
 
     # 3. Calibration mode from config
     tau_mode = "uncalibrated (tau_ce is null)"
-    cfg_path = Path("config.yaml")
+    cfg_path = config_file()
     if cfg_path.exists():
         try:
             with open(cfg_path, "r", encoding="utf-8") as f:
                 c = yaml.safe_load(f) or {}
                 tau_val = c.get("retrieval", {}).get("tau_ce")
                 if tau_val is not None:
-                    tau_mode = f"calibrated (tau_ce = {tau_val})"
+                    label = 'development calibration; independent review pending' if c.get('retrieval', {}).get('calibration_status') == 'development_only_pending_independent_review' else 'calibrated'
+                    tau_mode = f"{label} (tau_ce = {tau_val})"
         except Exception:
             pass
 

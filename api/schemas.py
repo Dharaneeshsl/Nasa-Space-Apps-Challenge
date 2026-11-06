@@ -16,6 +16,7 @@ class Citation(BaseModel):
     doc_id: str
     paper_title: Optional[str] = None
     page: Optional[int] = None
+    source_url: Optional[str] = None
 
 
 class AnswerSentence(BaseModel):

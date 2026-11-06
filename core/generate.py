@@ -18,6 +18,7 @@ import json
 from typing import List, Dict, Any, Optional, Tuple, Set
 from pathlib import Path
 import yaml
+from core.config import config_file
 from core.numcheck import filter_verified_sentences
 
 DISCLAIMER_TEXT = (
@@ -79,7 +80,7 @@ def load_generator_config(config_path: str = "config.yaml") -> Dict[str, Any]:
     if env_config:
         config_path = env_config
     cfg = {"generator_model": "", "temperature": 0.0}
-    p = Path(config_path)
+    p = config_file(config_path)
     if p.exists():
         try:
             with open(p, "r", encoding="utf-8") as f:
@@ -127,8 +128,15 @@ def validate_and_filter_citations(
 
     cleaned_sentences = []
     for s in sentences:
+        if not isinstance(s, dict) or not isinstance(s.get("text"), str) or not s["text"].strip():
+            continue
         verified_citations = []
-        for cite in s.get("citations", []):
+        citations = s.get("citations", [])
+        if not isinstance(citations, list):
+            continue
+        for cite in citations:
+            if not isinstance(cite, dict):
+                continue
             c_doc = cite.get("doc_id")
             c_page_raw = cite.get("page")
             c_page = None
@@ -148,7 +156,7 @@ def validate_and_filter_citations(
             if is_valid:
                 verified_citations.append({
                     "doc_id": c_doc,
-                    "paper_title": cite.get("paper_title") or doc_titles.get(c_doc),
+                    "paper_title": doc_titles.get(c_doc),
                     "page": c_page
                 })
         
@@ -275,6 +283,8 @@ def generate_answer(
                 res_content = response.choices[0].message.content
                 parsed = json.loads(res_content)
                 raw_sentences = parsed.get("sentences", [])
+                if not isinstance(raw_sentences, list):
+                    raise ValueError("Generator sentences must be a list")
                 generation_mode = "llm"
             except Exception:
                 raw_sentences = deterministic_fallback_synthesis(query, chunks)

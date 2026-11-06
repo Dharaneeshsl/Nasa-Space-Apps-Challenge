@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Tuple, Set
 def extract_numbers(text: str) -> List[float]:
     """Extract all numerical values from a text string, including values glued to unit letters (e.g. 10.5mm)."""
     # Pattern matches integers, decimals, and scientific notation even if followed immediately by unit characters
-    pattern = r'(?<![a-zA-Z0-9_])[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?'
+    pattern = r'(?<![a-zA-Z0-9_])[-+]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?'
     matches = re.findall(pattern, text)
     nums = []
     for m in matches:
@@ -97,20 +97,14 @@ def filter_verified_sentences(
         # Match against ONLY the chunks cited by this specific sentence
         if sentence_cites:
             cited_pairs = {(c.get("doc_id"), c.get("page")) for c in sentence_cites if c.get("doc_id")}
-            cited_docs = {c.get("doc_id") for c in sentence_cites if c.get("doc_id")}
             
             # Prefer matching exact (doc_id, page)
             relevant_chunks = [
                 chk for chk in candidate_chunks
                 if (chk.get("doc_id"), chk.get("page_number")) in cited_pairs
+                or (chk.get("doc_id"), None) in cited_pairs
             ]
-            if not relevant_chunks:
-                # Fall back to matching doc_id if page is None or unrecorded
-                relevant_chunks = [
-                    chk for chk in candidate_chunks
-                    if chk.get("doc_id") in cited_docs
-                ]
-            sentence_chunks = relevant_chunks if relevant_chunks else candidate_chunks
+            sentence_chunks = relevant_chunks
         else:
             sentence_chunks = candidate_chunks
             

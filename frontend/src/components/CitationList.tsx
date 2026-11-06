@@ -16,7 +16,7 @@ export const CitationList: React.FC<CitationListProps> = ({ citations }) => {
           className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-950/70 border border-blue-800/60 text-blue-300 text-xs font-mono"
         >
           <span>📄</span>
-          <span className="font-semibold truncate max-w-xs">{c.paper_title || c.doc_id}</span>
+          {c.source_url?.startsWith('https://') ? <a className="font-semibold truncate max-w-xs underline underline-offset-4" href={c.source_url} target="_blank" rel="noreferrer">{c.paper_title || c.doc_id} ↗</a> : <span className="font-semibold truncate max-w-xs">{c.paper_title || c.doc_id}</span>}
           {c.page !== undefined && c.page !== null ? (
             <span className="text-blue-400 font-bold">p.{c.page}</span>
           ) : (

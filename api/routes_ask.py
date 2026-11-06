@@ -10,6 +10,7 @@ from api.rate_limit import enforce_query_length, enforce_rate_limit
 from core.retrieval import retrieve_candidates
 from core.ranking import rank_candidates
 from core.evidence import evaluate_evidence_tier
+from core.sources import source_url_for
 from core.generate import generate_answer, check_query_ambiguity
 
 router = APIRouter(prefix="/api", tags=["Ask"])
@@ -131,6 +132,7 @@ def ask_question_endpoint(req: AskRequest, request: Request) -> AskResponse:
                 cited_doc_ids.add(d_id)
                 citations.append(Citation(
                     doc_id=d_id,
+                    source_url=source_url_for(d_id),
                     paper_title=c.get("paper_title"),
                     page=int(c["page"]) if c.get("page") is not None and str(c.get("page")).isdigit() else None
                 ))
@@ -144,7 +146,7 @@ def ask_question_endpoint(req: AskRequest, request: Request) -> AskResponse:
         cited_candidates = [c for c in ranked_candidates if c.get("doc_id") in cited_doc_ids]
         final_tier, final_rationale, _ = evaluate_evidence_tier(cited_candidates, top_logit=top_logit, tau_ce=tau_ce)
     else:
-        final_tier, final_rationale = tier, rationale
+        final_tier, final_rationale, _ = evaluate_evidence_tier([])
 
     final_status = "answered" if answer_sentences else "insufficient"
     refusal_reason = gen_res.get("refusal_reason") if not answer_sentences else None

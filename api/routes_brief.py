@@ -3,11 +3,12 @@
 Generates a structured Safety Brief synthesizing findings from retrieved papers.
 Uses the exact same retrieval pipeline; makes ZERO unsupported or fabricated claims.
 """
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from api.schemas import BriefRequest, BriefResponse, BriefSection, Citation
 from api.rate_limit import enforce_query_length, enforce_rate_limit
 from core.retrieval import retrieve_candidates
 from core.evidence import evaluate_evidence_tier
+from core.sources import source_url_for
 from core.generate import generate_answer
 
 router = APIRouter(prefix="/api", tags=["Safety Brief"])
@@ -18,6 +19,8 @@ def generate_safety_brief_endpoint(req: BriefRequest, request: Request) -> Brief
     question = req.question.strip()
     enforce_rate_limit(request)
     enforce_query_length(question, field_name="question")
+    if not question:
+        raise HTTPException(status_code=400, detail="Please enter a safety brief question.")
     
     ret_res = retrieve_candidates(question)
     candidates = ret_res.get("candidates", [])
@@ -52,6 +55,7 @@ def generate_safety_brief_endpoint(req: BriefRequest, request: Request) -> Brief
                     cited_doc_ids.add(d_id)
                     cites.append(Citation(
                         doc_id=d_id,
+                        source_url=source_url_for(d_id),
                         paper_title=c.get("paper_title"),
                         page=int(c["page"]) if c.get("page") is not None and str(c.get("page")).isdigit() else None
                     ))
@@ -69,7 +73,7 @@ def generate_safety_brief_endpoint(req: BriefRequest, request: Request) -> Brief
             for f in findings:
                 f.tier = tier
         else:
-            tier, rationale, _ = evaluate_evidence_tier(candidates)
+            tier, rationale, _ = evaluate_evidence_tier([])
             findings = [BriefSection(
                 title="Corpus Assessment",
                 content="Evidence chunks were retrieved but no verified grounded findings met quantitative grounding criteria.",

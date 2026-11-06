@@ -8,7 +8,7 @@ PyMuPDF section-aware chunking preserving:
 - section
 - exact page number (1-indexed)
 
-HARD RULE: Only index papers where paper_meta.csv has license_status = 'public_domain_confirmed'.
+Index public-domain papers or records explicitly marked PUBLIC_USE_PERMITTED by NTRS.
 All others are skipped and logged with explicit reason.
 Empty data/pdfs/ exits cleanly with a clear message.
 """
@@ -17,6 +17,7 @@ import csv
 import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
+from core.config import config_file, data_path
 
 try:
     import pymupdf as fitz
@@ -25,6 +26,15 @@ except ImportError:
         import fitz
     except ImportError:
         fitz = None
+
+
+def is_indexable_metadata(meta: Dict[str, Any]) -> bool:
+    status = str(meta.get('license_status', '')).strip().lower()
+    return status == 'public_domain_confirmed' or (
+        status == 'public_use_permitted'
+        and meta.get('ntrs_copyright_determination') == 'PUBLIC_USE_PERMITTED'
+        and meta.get('source_url', '').startswith('https://ntrs.nasa.gov/citations/')
+    )
 
 
 def load_paper_meta_lookup(meta_csv_path: str = "data/paper_meta.csv") -> Dict[str, Dict[str, Any]]:
@@ -112,7 +122,7 @@ def load_chunking_config(config_path: str = "config.yaml") -> Tuple[int, int, in
     default_min = 150
     default_max = 250
     default_overlap = 40
-    p = Path(config_path)
+    p = config_file(config_path)
     if p.exists():
         try:
             import yaml
@@ -167,8 +177,8 @@ def extract_chunks_from_pdf(
 
 
 def ingest_corpus(
-    pdfs_dir: str = "data/pdfs", 
-    meta_csv_path: str = "data/paper_meta.csv",
+    pdfs_dir: str = None,
+    meta_csv_path: str = None,
     config_path: str = "config.yaml",
     min_tokens: Optional[int] = None,
     max_tokens: Optional[int] = None,
@@ -185,6 +195,8 @@ def ingest_corpus(
     eff_max = max_tokens if max_tokens is not None else cfg_max
     eff_overlap = overlap if overlap is not None else cfg_overlap
 
+    pdfs_dir = pdfs_dir or data_path("corpus_dir", "data/pdfs", config_path)
+    meta_csv_path = meta_csv_path or data_path("paper_meta", "data/paper_meta.csv", config_path)
     p_dir = Path(pdfs_dir)
     meta_lookup = load_paper_meta_lookup(meta_csv_path)
     
@@ -211,8 +223,8 @@ def ingest_corpus(
             continue
             
         lic_status = str(meta.get("license_status", "")).strip().lower()
-        if lic_status != "public_domain_confirmed":
-            reason = f"License status is '{lic_status}' (must be 'public_domain_confirmed')"
+        if not is_indexable_metadata(meta):
+            reason = f"License status is '{lic_status}' (requires confirmed public domain or explicit NTRS public-use permission)"
             print(f"Skipping '{pdf_path.name}': {reason}")
             skipped_log.append({"doc_id": doc_id, "file": pdf_path.name, "reason": reason})
             continue

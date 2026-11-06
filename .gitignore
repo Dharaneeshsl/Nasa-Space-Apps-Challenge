@@ -40,6 +40,8 @@ data/index/*
 *.duckdb.wal
 datasets/
 *.NEF
+data/extracted/
+tmp/
 
 # IDE & OS
 .vscode/
